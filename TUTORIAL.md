@@ -3,7 +3,7 @@
 > 面向「音源猎手」插件的用户。**唯一的开销是一个域名（约 ¥5/年，也可以白嫖）**，其余全程免费；不需要服务器，不需要写代码。
 > 动手前请先读完开头的「你需要准备什么」。
 >
-> 代码仓库：<https://github.com/zlyon/cf-raw-mirror> —— 它的代码只有一份 `_worker.js`，**两种部署方式**（Workers 复制粘贴 / Pages Fork 一键部署）都能用，见第 4 步。
+> 代码仓库：<https://github.com/zlyon/cf-raw-mirror> —— 它的代码只有一份 `_worker.js`，**三种部署方式**（Workers 复制粘贴 / Deploy 按钮一键部署 / Pages Fork 连 Git）都能用，见第 4 步。
 
 ---
 
@@ -14,7 +14,7 @@
 - [第 1 步：注册 Cloudflare 账号](#第-1-步注册-cloudflare-账号)
 - [第 2 步：搞一个域名](#第-2-步搞一个域名)
 - [第 3 步：把域名交给 Cloudflare 托管](#第-3-步把域名交给-cloudflare-托管)
-- [第 4 步：部署（两种方式）](#第-4-步部署两种方式)
+- [第 4 步：部署（三种方式）](#第-4-步部署三种方式)
 - [第 5 步：绑域名，先让它跑通](#第-5-步绑域名先让它跑通)
 - [第 6 步：换成「路由 + 优选 IP」（关键的一步）](#第-6-步换成路由--优选-ip关键的一步)
 - [第 7 步：填进插件](#第-7-步填进插件)
@@ -159,16 +159,19 @@ https://gh.你的域名/https://raw.githubusercontent.com/owner/repo/main/xxx.js
 
 ---
 
-## 第 4 步：部署（两种方式）
+## 第 4 步：部署（三种方式）
 
-**选一种就行，两种方式部署完效果完全一样**，区别只在以后怎么更新代码。
+**选一种就行，三种方式部署完效果完全一样**，区别只在「要不要 GitHub 账号」和「以后怎么更新代码」。
 
-- **方式一：Workers** —— 复制粘贴，最省事，适合只看一遍教程就完事的人。
-- **方式二：Pages** —— Fork 后连 Git，以后上游更新了一点 `Sync fork` 就自动重部署。
+- **方式一：Workers** —— 复制粘贴，**只需要 Cloudflare 账号**，最省事，适合只想跑通就完事的人。
+- **方式二：Pages** —— Fork 后连 Git，以后上游更新了点一下 `Sync fork` 就自动重部署。
+- **方式三：Deploy 按钮** —— **一键部署**，需要 **GitHub + Cloudflare** 两个账号；不用复制粘贴、不用装东西，部署出来同样是 Worker。
+
+> **为什么推荐方式一或方式三？** 因为第 6 步的「优选 IP」**只对 Workers 部署有效**，而方式一、方式三部署出来的都是 Worker —— **只有方式二（Pages）做不了优选**，国内可能不快。
 
 ### 方式一：Workers（复制粘贴）
 
-1. Cloudflare 后台左侧 → **`Workers & Pages`**（或 `Compute (Workers)`）
+1. 打开 **[Cloudflare 后台的 Workers & Pages](https://dash.cloudflare.com/?to=/:account/workers-and-pages)**（左侧菜单也叫 `Workers & Pages` / `Compute (Workers)`；**未登录会先让你登录，没有账号会引导你注册**）
 2. 点 **`Create`** → 选 **`Create Worker`**（**不是** Pages）
 3. 名字随便起，比如 `gh-raw-mirror` → 点 `Deploy`
 4. 部署完点右上角 **`Edit code`**，进入在线编辑器
@@ -340,7 +343,24 @@ export default {
 >
 > **好处**：以后上游更新了，在你自己 Fork 的仓库点一下 **`Sync fork`**，Cloudflare 会自动重新部署，不用再复制粘贴。
 >
-> ⚠️ **但 Pages 有一个硬限制：做不了第 6 步的「优选 IP」。** Cloudflare 给 Pages 绑域名时不允许你关掉代理（橙云），而优选 IP 的前提正是「DNS 记录改成灰云 + 用 Workers 路由接管」。所以 **Pages 部署只能走 Cloudflare 分配的默认线路，国内访问可能不快**。如果你在意速度，**请用方式一（Workers）**。
+> ⚠️ **但 Pages 有一个硬限制：做不了第 6 步的「优选 IP」。** Cloudflare 给 Pages 绑域名时不允许你关掉代理（橙云），而优选 IP 的前提正是「DNS 记录改成灰云 + 用 Workers 路由接管」。所以 **Pages 部署只能走 Cloudflare 分配的默认线路，国内访问可能不快**。如果你在意速度，**请用方式一（Workers）或方式三（Deploy 按钮）**。
+
+### 方式三：Deploy 按钮（一键部署）
+
+**前提：你需要有一个 [GitHub 账号](https://github.com/signup) 和一个 Cloudflare 账号。** 这是三种方式里**最省事**的 —— 不用复制粘贴、不用装任何东西，而且**部署出来同样是 Worker，第 6 步的优选 IP 照样能做**。
+
+1. 打开仓库 <https://github.com/zlyon/cf-raw-mirror>，页面顶部就有一个 **Deploy to Cloudflare** 按钮，点它
+   > 也可以直接用这个链接：<https://deploy.workers.cloudflare.com/?url=https://github.com/zlyon/cf-raw-mirror>
+2. 按页面引导**登录 / 注册 Cloudflare**，并**授权 Cloudflare 访问你的 GitHub**
+   > 没有 GitHub 账号的话，这一步会先让你去注册一个。
+3. Cloudflare 会自动把仓库**复制一份到你的 GitHub 账号下**，并让你改仓库名 / Worker 名（随便起，比如 `cf-raw-mirror`）
+4. 点 **`Deploy`** —— 它用 Cloudflare 的构建服务自动部署，**十几秒就完成**
+
+**怎么确认成功**：回到 `Workers & Pages`，能看到一个新建好的 Worker 就成功了。后面的第 5 步（绑域名）、第 6 步（优选 IP）和方式一**完全一样**。
+
+> **好处**：它在你 GitHub 里建的那份仓库**连着 Cloudflare**。以后想改代码，直接在 GitHub 上编辑提交，Cloudflare 会自动重新部署 —— 不用再复制粘贴。
+>
+> **代价**：必须有 GitHub 账号，并且要同意 Cloudflare 在**你的 GitHub 里建一个仓库**。不想给这个授权，就用方式一。
 
 ### 自测一下
 
@@ -385,9 +405,9 @@ https://gh.你的域名/https://raw.githubusercontent.com/zlyon/lx-hunter/HEAD/p
 
 到这一步，镜像已经能用了，但大概率**不快**：Cloudflare 默认分配给国内用户的入口 IP 经常很慢（实测同一域名、同一个 Worker，只换入口 IP，325KB 文件从 13 秒变成 0.5 秒）。
 
-> **这一步只适用于「方式一：Workers」部署。**
-> Pages 部署做不了优选 —— Cloudflare 给 Pages 绑域名时强制走它自己的代理，代理开关不能自己控制，没有「路由」这个入口。想提速就得改用 Workers 方式（或者在第三方 DNS 上做分线路解析，很折腾，不推荐）。
-> 另外提醒：Workers 部署的也能先做完第 5 步、确认能用，再做这一步。
+> **这一步只适用于 Workers 部署 —— 也就是方式一（复制粘贴）和方式三（Deploy 按钮）。**
+> **方式二（Pages）做不了优选** —— Cloudflare 给 Pages 绑域名时强制走它自己的代理，代理开关不能自己控制，没有「路由」这个入口。想提速就得改用方式一或方式三（或者在第三方 DNS 上做分线路解析，很折腾，不推荐）。
+> 另外提醒：可以先做完第 5 步、确认能用，再做这一步。
 
 要提速就得换 IP。这里有两个坑必须先讲明白，否则你会白折腾：
 
@@ -515,11 +535,6 @@ nslookup gh.你的域名
    - 几百毫秒 ~ 2 秒属正常；超过 3 秒或报错，回第 6 步换个 IP
 4. 点 **保存**
 
-**关于 `https://` 前缀**：
-
-- **1.4.22 及以后**：写不写都行，插件会自动补，已写的不会被重复补。
-- **1.4.21 及更早**：**必须自己写全 `https://`**。老版本只有「测试」按钮会自动补协议，真正爬取时不补，填裸域名会拼出非法地址 → **测试通过、爬取静默失败**。
-
 ---
 
 ## 第 8 步：出问题了对号入座
@@ -579,7 +594,7 @@ Cloudflare Workers 免费版：**10 万次请求 / 天**（整个账号所有 Wo
 
 - **免费域名记得续期**：DigitalPlat 的域名 180 天到期，免费续，但**要手动点**，别让它过期。
 - **固定 A 记录的 IP 会随时间劣化**（CF 调线路、运营商改路由）。**建议一两个月重测一次**，慢了就换。
-- **代码更新**：Workers 部署的，从仓库复制新版 `_worker.js` 粘贴后点 `Deploy`；Pages 部署的，在你自己 Fork 的仓库点一次 `Sync fork` 就会自动重新部署。
+- **代码更新**：方式一（复制粘贴）→ 从仓库复制新版 `_worker.js` 粘贴后点 `Deploy`；方式二（Pages）→ 在你自己 Fork 的仓库点一次 `Sync fork` 就自动重部署；方式三（Deploy 按钮）→ 在你账号下那份仓库里改完提交，Cloudflare 会自动重部署。
 - **脚本缓存**：Worker 内对**分支名/tag** 缓存 5 分钟，对**commit sha** 缓存 1 天。所以刚推送的新脚本可能 5 分钟后才拿到，属正常。
 - **想看用量**：Cloudflare 后台 → `Workers & Pages` → 你的 Worker → `Metrics`，能看到请求数和命中率。
 
@@ -587,8 +602,8 @@ Cloudflare Workers 免费版：**10 万次请求 / 天**（整个账号所有 Wo
 
 ## 一句话总结
 
-**注册 Cloudflare → 弄个域名并交给 Cloudflare 托管 → 用 Workers 部署（复制粘贴 `_worker.js`）→ 删自定义域、加路由、把 DNS 改成灰色云并指向快 IP → 填进插件。**
+**注册 Cloudflare → 弄个域名并交给 Cloudflare 托管 → 部署（方式一复制粘贴；有 GitHub 就用方式三一键部署）→ 删自定义域、加路由、把 DNS 改成灰色云并指向快 IP → 填进插件。**
 
-> 想省事也可以用 Pages 一键部署，但那样**做不了优选 IP、国内可能不快**，取舍见第 4 步的说明。
+> **方式一 和 方式三 都是 Worker 部署，都能做优选 IP。** 只有方式二（Pages）做不了优选、国内可能不快，取舍见第 4 步的说明。
 
 卡在哪一步都可以直接把现象发出来，附上当时的截图。

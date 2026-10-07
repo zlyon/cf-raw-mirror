@@ -3,6 +3,10 @@ name = "cf-raw-mirror"
 main = "_worker.js"
 compatibility_date = "2026-10-01"
 
+# 这个文件的作用（别删）：
+#   1) 让仓库顶部的「Deploy to Cloudflare」按钮能识别入口文件（main 指向 _worker.js）；
+#   2) 想用命令行 wrangler 本地开发 / 部署时也能用。
+#
 # 用法：
 #   wrangler deploy          # 部署到 Workers
 #   wrangler dev             # 本地调试

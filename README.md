@@ -14,20 +14,22 @@
 
 ## 部署方式（三选一）
 
-同一份 [`_worker.js`](./_worker.js) 三种方式都能用，**部署完功能完全一样**。但有一个区别，**选之前务必看一眼**：
+同一份 [`_worker.js`](./_worker.js) 三种方式都能用，**部署完功能完全一样**。但区别不小，**选之前务必看一眼**：
 
-| 方式 | 以后怎么更新 | 能否配「优选 IP」（国内才快） |
-|---|---|---|
-| **Workers**（推荐） | 重新复制粘贴 | ✅ **可以** |
-| Pages | 点一下 `Sync fork` 自动重部署 | ❌ **不行** ⚠️ |
+| 方式 | 需要什么账号 | 以后怎么更新 | 能否配「优选 IP」（国内才快） |
+|---|---|---|---|
+| **方式一：Workers**（复制粘贴） | 只要 Cloudflare | 重新复制粘贴 | ✅ **可以** |
+| **方式二：Pages** | Cloudflare + GitHub | 点一下 `Sync fork` 自动重部署 | ❌ **不行** ⚠️ |
+| **方式三：Deploy 按钮** | Cloudflare + GitHub | 在 GitHub 上改一下自动重部署 | ✅ **可以** |
 
-> **只想要个能用的镜像** → 随便选。
-> **在意国内速度** → **建议用 Workers**。Pages 绑域名时强制走 Cloudflare 自己的代理，代理开关不能自己控制，没法做优选 IP（原因见方式二下方）。
+> **只想要个能用的镜像、越简单越好** → **方式一**（只需要 Cloudflare 账号，不用 GitHub）。
+> **有 GitHub 账号、想一键搞定、以后还能自动更新** → **方式三**。
+> **在意国内速度** → **方式一 / 方式三都行** —— 它们部署出来的都是 **Worker，能做优选 IP**；**方式二 Pages 不行**（绑域名时强制走 Cloudflare 自己的代理，代理开关不能自己控制，原因见方式二下方）。
 
 ### 方式一：Workers（复制粘贴，最省事）
 
 1. 打开 [`_worker.js`](./_worker.js)，点右上角 **`Raw`**，全选复制
-2. Cloudflare 后台 → **`Workers & Pages`** → **`Create`** → **`Create Worker`** → 起个名字（如 `cf-raw-mirror`）→ **`Deploy`**
+2. 打开 **[Cloudflare 后台的 Workers & Pages](https://dash.cloudflare.com/?to=/:account/workers-and-pages)**（**还没登录会先让你登录；没有账号会引导你注册**）→ 点 **`Create`** → **`Create Worker`** → 起个名字（如 `cf-raw-mirror`）→ **`Deploy`**
 3. 点 **`Edit code`** → **把编辑器里默认代码全选删掉** → 粘贴刚才复制的内容 → 右上角 **`Deploy`**
 
 > 只按 Ctrl+S 只存在编辑器里，**必须点 `Deploy` 才生效**。
@@ -35,7 +37,7 @@
 ### 方式二：Pages（Fork 后连 Git，日后好更新）
 
 1. 点本仓库右上角 **`Fork`**
-2. Cloudflare 后台 → **`Workers & Pages`** → **`Create`** → **`Pages`** → **`Connect to Git`** → 选你 Fork 的仓库
+2. 打开 **[Cloudflare 后台的 Workers & Pages](https://dash.cloudflare.com/?to=/:account/workers-and-pages)**（未登录会先让你登录）→ **`Create`** → **`Pages`** → **`Connect to Git`** → 选你 Fork 的仓库
 3. 构建设置**全部留空**：
 
    | 设置项 | 填什么 |
@@ -50,17 +52,25 @@
 > 以后上游更新了，在你 Fork 的仓库点一次 **`Sync fork`** 就会自动重新部署。
 
 > [!IMPORTANT]
-> **Pages 部署做不了「优选 IP」。** Cloudflare 给 Pages 绑域名时不允许你关掉代理（橙云），而优选 IP 的前提正是「DNS 记录改成灰云 + 用 Workers 路由接管」。所以 Pages 部署**只能走 Cloudflare 分配的默认线路**，国内访问可能不快。想提速请改用 Workers 方式（或在第三方 DNS 上做分线路解析，很折腾，不推荐）。
+> **Pages 部署做不了「优选 IP」。** Cloudflare 给 Pages 绑域名时不允许你关掉代理（橙云），而优选 IP 的前提正是「DNS 记录改成灰云 + 用 Workers 路由接管」。所以 Pages 部署**只能走 Cloudflare 分配的默认线路**，国内访问可能不快。想提速请改用 **方式一 或 方式三**（它们部署出来的都是 Worker）。
 
-### 方式三：命令行
+### 方式三：Deploy 按钮（一键部署，需要 GitHub）
 
-```bash
-npm i -g wrangler
-wrangler login
-wrangler deploy
-```
+**前提：你需要有一个 [GitHub 账号](https://github.com/signup) 和一个 Cloudflare 账号**（两者都没有的话，下面每一步都会引导你注册）。
 
-或直接点上面的 **Deploy to Cloudflare** 按钮。
+1. 点页面顶部的 **[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/zlyon/cf-raw-mirror)**
+2. 按引导**登录 / 注册 Cloudflare**，并**授权 Cloudflare 访问你的 GitHub**
+3. Cloudflare 会自动把本仓库**复制一份到你的 GitHub 账号下**，并让你改仓库名 / Worker 名
+4. 点 **`Deploy`** —— 它用 Cloudflare 的构建服务自动完成部署，**不用复制粘贴、不用装任何东西**
+
+> **这其实是最省心的方式**：
+> - 部署出来的是 **Worker**，所以**照样能做「优选 IP」**（国内快）；
+> - 它**连着你自己的那份 GitHub 仓库** —— 以后想改点什么，直接在 GitHub 上编辑、提交，Cloudflare 会自动重新部署。
+>
+> 代价是：**必须要有一个 GitHub 账号**，并且要同意 Cloudflare 在**你的 GitHub 里建一个仓库**。
+
+> [!NOTE]
+> 本按钮由 Cloudflare 官方提供（`deploy.workers.cloudflare.com`）。它**只支持 Workers**，不能用于 Pages；仓库必须是**公开**的。
 
 ## ⚠️ 部署完国内打不开？这是正常的
 
@@ -89,8 +99,6 @@ https://gh.example.com/https://raw.githubusercontent.com/zlyon/lx-hunter/main/pl
 ### 填进「音源猎手」
 
 `设置` → `网络` → **raw 加速镜像** 选 **`自定义…`** → 输入框填 `https://你的域名` → 点右边 `测试`。
-
-> **1.4.22 起**写不写 `https://` 都可以；**1.4.21 及更早**必须自己写全 `https://`（老版本的「测试」按钮会自动补协议，但真正爬取时不会，会出现「测试通过、爬取静默失败」）。
 
 ## 行为说明
 
